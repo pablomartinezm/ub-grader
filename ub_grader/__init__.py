@@ -18,9 +18,9 @@ grade(func, student_id, public_key_path=None, signing_key_path=None,
 Only these names are exported via ``__all__`` to keep the public API small.
 """
 
-from .students import init_students, get_student
-from .spec_loader import load_spec
 from .grader import grade
+from .spec_loader import load_spec
+from .students import get_student, init_students
 
 __all__ = [
     "init_students",
