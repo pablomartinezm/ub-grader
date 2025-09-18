@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ub-grader"
+version = "0.2.0"
+description = "Librería para auto-corrección local de prácticas con reporte cifrado y firmado"
+authors = [{name="Universidad de Barcelona", email="noreply@example.com"}]
+requires-python = ">=3.10"
+license = {text = "MIT"}
+readme = "README.md"
+keywords = ["grading","education","encryption","autograder"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Education",
+  "Topic :: Education",
+]
+dependencies = [
+  "cryptography>=42.0.0",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[project.urls]
+Homepage = "https://example.com/ub-grader"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0.0",
+  "ruff>=0.5.0",
+  "pre-commit>=3.7.0",
+]
+
+[tool.setuptools.packages.find]
+where=["."]
+
+[tool.ub_grader]
+# Configuración futura (placeholder)
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+  "E",  # pycodestyle
+  "F",  # pyflakes
+  "I",  # isort (imports)
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade
+  "SIM",# flake8-simplify
+  "W",  # warnings
+  "PL", # pylint subset
+]
+ignore = []
+
+[tool.ruff.lint.isort]
+known-first-party = ["ub_grader"]
+force-single-line = false
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+
+# Additional linters configuration to unify max line length (some tools default to 79):
+# Usamos solo Ruff como linter y formateador; se eliminan configuraciones de flake8/pylint.

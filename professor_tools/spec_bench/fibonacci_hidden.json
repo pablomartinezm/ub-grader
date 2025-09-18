@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "assignment_id": "bench_fib",
+  "public_key": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwvJOwBNgOWn+TQAjSouG\nTjna3pWKOpihAn2ovG+mAyG++GqK1C/y7yahXuaJTH2bKfAe4TlkjXTTmFQm5Jxm\nwf8xzYJQ3oqiQyyEENwsEbxD4CPbN+xL31eLyQ0RjZRuLWGNL1wG5GlnB2fdTp6x\nbHPkrUlu9eUeekRbY4uG9QhMJ3M20Gm9OtBmJINNa0Nc0q4Ti8V3S8dr1vXmCU1x\nqqot2ncOSpx2pTQ3vaG2Gu8HpwX9wKQD5Xh27SbbSqTxVxfRD6b2xsuPBw4oPXs5\n8gM3g6AGpoaSxyGWcM9Q4KSIQ5MZkymHIQxp9WHIR6ABjBcaC2JrjFGIyX+5BZ2A\nJQIDAQAB\n-----END PUBLIC KEY-----\n",
+  "tests": [
+    {
+      "id": "t1",
+      "description": "fib(0)=0",
+      "input": { "args": [0], "kwargs": {} },
+      "expected": 0,
+      "weight": 1
+    },
+    {
+      "id": "t2",
+      "description": "fib(1)=1",
+      "input": { "args": [1], "kwargs": {} },
+      "expected": 1,
+      "weight": 1
+    },
+    {
+      "id": "t3",
+      "description": "fib(6)=8",
+      "input": { "args": [6], "kwargs": {} },
+      "expected": 8,
+      "expected_hidden": true,
+      "weight": 1
+    }
+  ],
+  "scoring": {
+    "mode": "weighted_sum_with_penalties",
+    "rounding": 2,
+    "penalties": {},
+    "max_score": 10
+  },
+  "integrity": {}
+}

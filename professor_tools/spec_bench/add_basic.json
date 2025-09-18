@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0",
+  "assignment_id": "bench_add",
+  "tests": [
+    {
+      "id": "t1",
+      "description": "1+2=3",
+      "input": { "args": [1, 2], "kwargs": {} },
+      "expected": 3,
+      "weight": 1
+    },
+    {
+      "id": "t2",
+      "description": "5+7=12",
+      "input": { "args": [5, 7], "kwargs": {} },
+      "expected": 12,
+      "weight": 1
+    }
+  ],
+  "scoring": {
+    "mode": "weighted_sum_with_penalties",
+    "rounding": 2,
+    "penalties": {},
+    "max_score": 10
+  },
+  "integrity": {}
+}

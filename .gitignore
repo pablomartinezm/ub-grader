@@ -1,0 +1,50 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+.env
+.env.*
+
+# Packaging / dist
+build/
+dist/
+.eggs/
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+# Ruff
+.ruff_cache/
+
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.orig
+
+# Logs / temp
+*.log
+*.tmp
+*.bak
+.DS_Store
+
+# Reports / generated keys
+report_*.enc
+keys/*_priv.pem
+
+# Local tools outputs
+professor_tools/tmp/
