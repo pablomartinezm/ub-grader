@@ -275,7 +275,10 @@ Release checklist:
 
 You can publish without storing API tokens using PyPI's Trusted Publishers + GitHub Actions OIDC:
 
-1. Ensure the GitHub repo is public (or you have set the proper visibility) and the workflow file exists at `.github/workflows/publish.yml` (already included).
+1. Ensure the GitHub repo is public (or you have set the proper visibility) and the workflow file exists at `.github/workflows/publish.yml` (already included). The workflow now:
+  - Publishes first to TestPyPI (`testpypi` job)
+  - Then to PyPI (`pypi` job) after TestPyPI succeeds
+  - Triggers on pushing a version tag `v*.*.*` OR on a published GitHub Release
 2. Go to https://pypi.org/project/ub-grader/settings/publishing/ (if project not created yet, create a *pending* publisher first):
   - Click "Add trusted publisher" → Choose GitHub
   - Organization / Owner: `pablomartinezm`
@@ -288,7 +291,8 @@ You can publish without storing API tokens using PyPI's Trusted Publishers + Git
 5. The workflow builds and publishes automatically via OIDC (no secrets needed). Check Actions tab for confirmation.
 
 Notes:
-- Only tags matching `v*.*.*` trigger a publish.
+- Only tags matching `v*.*.*` or publishing a GitHub Release trigger the workflow.
+- TestPyPI publish may skip existing versions (`skip-existing: true`).
 - Failed upload (e.g. version reuse) will fail the job; bump version and retag.
 - To test first against TestPyPI with OIDC, add a second job using `repository-url: https://test.pypi.org/legacy/` and register another trusted publisher for TestPyPI.
 
