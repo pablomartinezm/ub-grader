@@ -22,9 +22,27 @@ from .grader import grade
 from .spec_loader import load_spec
 from .students import get_student, init_students
 
+# Expose a runtime package version (PEP 621 metadata) for tooling / debugging.
+try:  # pragma: no cover
+    from importlib.metadata import (  # type: ignore
+        version as _pkg_version,
+        PackageNotFoundError,
+    )
+except ImportError:  # pragma: no cover
+    from importlib_metadata import (  # type: ignore
+        version as _pkg_version,
+        PackageNotFoundError,  # type: ignore
+    )
+
+try:  # pragma: no cover - normal path
+    __version__ = _pkg_version("ub-grader")
+except PackageNotFoundError:  # pragma: no cover - editable/no install context
+    __version__ = "0.0.0+unknown"
+
 __all__ = [
     "init_students",
     "get_student",
     "load_spec",
     "grade",
+    "__version__",
 ]

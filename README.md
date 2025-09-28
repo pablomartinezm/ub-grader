@@ -271,6 +271,29 @@ Release checklist:
 
 - 0.2.0: Required key in `init_students` changed from `id` to `niub` (pre-1.0 breaking change).
 
+### 10.1 Automated Publishing with PyPI Trusted Publisher (OIDC)
+
+You can publish without storing API tokens using PyPI's Trusted Publishers + GitHub Actions OIDC:
+
+1. Ensure the GitHub repo is public (or you have set the proper visibility) and the workflow file exists at `.github/workflows/publish.yml` (already included).
+2. Go to https://pypi.org/project/ub-grader/settings/publishing/ (if project not created yet, create a *pending* publisher first):
+  - Click "Add trusted publisher" → Choose GitHub
+  - Organization / Owner: `pablomartinezm`
+  - Repository: `ub-grader`
+  - Workflow name: `publish.yml` (must match file name)
+  - Environment (optional): leave blank unless you add `environment:` in the workflow
+  - Permissions: accept defaults, save
+3. (If project name not yet existing) Use the *pending* publisher form with the above details, then push a tag to create + publish in one go.
+4. Cut a release by tagging: `git tag -a v0.2.1 -m "ub-grader 0.2.1" && git push origin v0.2.1`.
+5. The workflow builds and publishes automatically via OIDC (no secrets needed). Check Actions tab for confirmation.
+
+Notes:
+- Only tags matching `v*.*.*` trigger a publish.
+- Failed upload (e.g. version reuse) will fail the job; bump version and retag.
+- To test first against TestPyPI with OIDC, add a second job using `repository-url: https://test.pypi.org/legacy/` and register another trusted publisher for TestPyPI.
+
+Minimal manual override: you can still do a local `twine upload` if needed; both methods coexist.
+
 ## 13. License
 
 MIT
