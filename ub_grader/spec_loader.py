@@ -94,24 +94,27 @@ def _hash_ok(data: dict) -> bool:
     of the spec with any signature removed.
     """
     integ = data.get("integrity") or {}
-    ref = integ.get("hash")
-    if not ref:
-        return True
-    algo, _, hexval = ref.partition(":")
-    h = hashlib.new(algo)
-    # Hash of canonical JSON without integrity.signature if present
-    clone = dict(data)
-    if "integrity" in clone and isinstance(clone["integrity"], dict):
-        clone_int = dict(clone["integrity"])
-        clone_int.pop("signature", None)
-        clone["integrity"] = clone_int
-    canonical = json.dumps(
-        clone,
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode()
-    h.update(canonical)
-    return h.hexdigest() == hexval
+    # ref = integ.get("hash")
+    # if not ref:
+    #    return True
+    for algo_name in integ:
+        if algo_name != "signature":
+            h = hashlib.new(algo_name)
+            hexval = integ[algo_name]
+            # Hash of canonical JSON without integrity.signature if present
+            clone = dict(data)
+            if "integrity" in clone and isinstance(clone["integrity"], dict):
+                clone["integrity"] = {}
+            canonical = json.dumps(
+                clone,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+
+            h.update(canonical)
+            if h.hexdigest() != hexval:
+                return False
+    return True
 
 
 def load_spec(url: str) -> Spec:
