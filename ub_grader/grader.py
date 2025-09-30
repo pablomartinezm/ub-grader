@@ -180,6 +180,7 @@ def grade(
         "spec_version": spec.version,
         "tests": test_results,
         "scoring": scoring,
+        "integrity": spec.integrity,
     }
 
     # Priority: explicit argument > spec.public_key
