@@ -66,7 +66,7 @@ def test_grade_basic(tmp_path):
     out_path = tmp_path / "report.enc"
     result = grade(
         simple_add,
-        student_id="S1",
+        students_id=["S1"],
         public_key_path=str(rsa_pub_path),
         signing_key_path=str(ed_priv_path),
         output_path=str(out_path),

@@ -16,7 +16,7 @@ import hashlib
 import json
 import urllib.request
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -27,6 +27,7 @@ class TestSpec:
     the expected value (and the student's actual result when failing) are
     hidden in reports to avoid leaking secret tests.
     """
+
     id: str
     description: str
     input_args: list
@@ -48,6 +49,7 @@ class ScoringSpec:
     of configurable penalty coefficients and ``max_score`` caps the final
     achievable score.
     """
+
     mode: str
     rounding: int
     penalties: dict
@@ -57,16 +59,17 @@ class ScoringSpec:
 @dataclass
 class Spec:
     """Top‑level loaded specification container."""
+
     version: str
     assignment_id: str
-    tests: List[TestSpec]
+    tests: list[TestSpec]
     scoring: ScoringSpec
     integrity: dict
     # Optional embedded RSA public key (PEM)
-    public_key: Optional[str] = None
+    public_key: str | None = None
 
 
-_SPEC_STATE: list[Optional[Spec]] = [None]
+_SPEC_STATE: list[Spec | None] = [None]
 
 
 def _validate_basic(data: dict) -> None:
@@ -126,7 +129,7 @@ def load_spec(url: str) -> Spec:
     if not _hash_ok(data):
         raise ValueError("Integrity hash does not match")
 
-    tests: List[TestSpec] = []
+    tests: list[TestSpec] = []
     for t in data["tests"]:
         tests.append(
             TestSpec(

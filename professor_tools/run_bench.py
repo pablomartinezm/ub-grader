@@ -7,6 +7,7 @@ Ejemplos:
 
 Esto carga la spec JSON y ejecuta grade() con un estudiante ficticio S1.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,11 +32,7 @@ def _import_callable(dotted: str):
     if not func_name:
         raise ValueError("Usar formato modulo:funcion")
     mod = importlib.import_module(
-        (
-            f"professor_tools.{mod_name}"
-            if not mod_name.startswith("professor_tools")
-            else mod_name
-        )
+        f"professor_tools.{mod_name}" if not mod_name.startswith("professor_tools") else mod_name
     )
     func = getattr(mod, func_name)
     return func

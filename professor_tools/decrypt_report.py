@@ -7,6 +7,7 @@ Uso:
 
 Salida: JSON identado en stdout.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,8 +19,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ed25519, padding
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.serialization import (load_pem_private_key,
-                                                          load_pem_public_key)
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 
 def _b64(x: str) -> bytes:

@@ -47,12 +47,13 @@ def test_per_spec_public_key(tmp_path):
     out_path = tmp_path / "r.enc"
     result = grade(
         _func,
-        student_id="S1",
+        students_id=["S1"],
         public_key_path=None,  # should use embedded spec public_key
         signing_key_path=None,
         output_path=str(out_path),
     )
-    assert result["final_score"] == 10
+    expected_final_score = 10
+    assert result["final_score"] == expected_final_score
     data = json.loads(out_path.read_text(encoding="utf-8"))
     # basic container fields
     assert {"ciphertext", "key", "iv", "tag"}.issubset(data.keys())

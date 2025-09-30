@@ -10,8 +10,8 @@ Only two helper functions are exported publicly: :func:`init_students` and
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List
 
 
 @dataclass(slots=True)
@@ -47,7 +47,7 @@ class Student:
 
 class _StudentRegistry:
     def __init__(self) -> None:
-        self._students: Dict[str, Student] = {}
+        self._students: dict[str, Student] = {}
 
     def init(self, students: Iterable[dict | Student]) -> None:
         """Populate the registry from an iterable of dicts or ``Student``.
@@ -57,15 +57,13 @@ class _StudentRegistry:
         * Require unique alphanumeric IDs.
         * Map Spanish or English name keys to internal attributes.
         """
-        tmp: Dict[str, Student] = {}
+        tmp: dict[str, Student] = {}
         for s in students:
             if isinstance(s, dict):
                 # Accept legacy and new keys: niub | student_id | id
                 sid = s.get("niub") or s.get("student_id") or s.get("id")
                 if not sid:
-                    raise ValueError(
-                        "Missing 'niub'/'student_id' in student entry"
-                    )
+                    raise ValueError("Missing 'niub'/'student_id' in student entry")
                 student = Student(
                     id=str(sid),
                     # Prefer English keys if present
@@ -91,7 +89,7 @@ class _StudentRegistry:
             # Re-raise with clearer message
             raise KeyError(f"Student not found: {student_id}") from exc
 
-    def all(self) -> List[Student]:
+    def all(self) -> list[Student]:
         """Return a list of all registered students."""
         return list(self._students.values())
 

@@ -21,7 +21,8 @@ from __future__ import annotations
 import json
 import time
 import tracemalloc
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 from .crypto_utils import encrypt_and_sign
 from .spec_loader import Spec, TestSpec, get_loaded_spec
@@ -30,7 +31,7 @@ from .students import get_student
 # (No public symbols defined at module level besides grade())
 
 
-class TestResultDict(Dict[str, Any]):
+class TestResultDict(dict[str, Any]):
     """Single test execution result."""
 
     def __repr__(self) -> str:  # helpful for debugging
@@ -44,14 +45,13 @@ def _compare(expected, got, comparison: str) -> bool:
     * ``equal``  – direct equality.
     * ``approx`` – numeric tolerance (absolute difference <= 1e-6).
     """
-    if comparison == 'equal':
+    tolerance = 1e-6
+    if comparison == "equal":
         return expected == got
-    if comparison == 'approx':
+    if comparison == "approx":
         # Simple approximate comparison for numeric values
-        if isinstance(expected, (int, float)) and isinstance(
-            got, (int, float)
-        ):
-            return abs(expected - got) <= 1e-6
+        if isinstance(expected, int | float) and isinstance(got, int | float):
+            return abs(expected - got) <= tolerance
         return False
     return False
 
@@ -94,7 +94,7 @@ def _run_single(func: Callable, spec: TestSpec) -> TestResultDict:
     )
 
 
-def _score(spec: Spec, test_results: List[TestResultDict]) -> Dict[str, Any]:
+def _score(spec: Spec, test_results: list[TestResultDict]) -> dict[str, Any]:
     """Aggregate per‑test results into a scoring summary.
 
     Applies weighting and optional penalties for time / memory overages as
@@ -106,40 +106,38 @@ def _score(spec: Spec, test_results: List[TestResultDict]) -> Dict[str, Any]:
     acc = 0.0
     penalty_total = 0.0
 
-    for t_spec, res in zip(spec.tests, test_results):
+    for t_spec, res in zip(spec.tests, test_results, strict=False):
         if t_spec.weight <= 0:
             continue
-        if res['passed']:
+        if res["passed"]:
             acc += t_spec.weight
         # Penalties for time/memory overages
-        if res['time_ms'] > t_spec.time_limit_ms:
-            over = res['time_ms'] - t_spec.time_limit_ms
-            penalty_total += over * float(penalties_cfg.get('time_over_ms', 0))
-        if res['memory_kb'] > t_spec.memory_limit_kb:
-            overm = res['memory_kb'] - t_spec.memory_limit_kb
-            penalty_total += overm * float(
-                penalties_cfg.get('memory_over_kb', 0)
-            )
+        if res["time_ms"] > t_spec.time_limit_ms:
+            over = res["time_ms"] - t_spec.time_limit_ms
+            penalty_total += over * float(penalties_cfg.get("time_over_ms", 0))
+        if res["memory_kb"] > t_spec.memory_limit_kb:
+            overm = res["memory_kb"] - t_spec.memory_limit_kb
+            penalty_total += overm * float(penalties_cfg.get("memory_over_kb", 0))
 
     ratio = acc / total_weight if total_weight > 0 else 0.0
     raw_score = ratio * max_score
     final_score = max(0.0, raw_score - penalty_total)
     final_score = round(final_score, spec.scoring.rounding)
     return {
-        'ratio_passed': round(ratio, 4),
-        'raw_score': round(raw_score, spec.scoring.rounding),
-        'penalties': round(penalty_total, spec.scoring.rounding),
-        'final_score': final_score,
-        'max_score': max_score,
+        "ratio_passed": round(ratio, 4),
+        "raw_score": round(raw_score, spec.scoring.rounding),
+        "penalties": round(penalty_total, spec.scoring.rounding),
+        "final_score": final_score,
+        "max_score": max_score,
     }
 
 
 def grade(
     func: Callable,
-    student_id: str,
-    public_key_path: Optional[str] = None,
-    signing_key_path: Optional[str] = None,
-    output_path: Optional[str] = None,
+    students_id: list[str],
+    public_key_path: str | None = None,
+    signing_key_path: str | None = None,
+    output_path: str | None = None,
 ) -> Any:
     """Run all loaded spec tests against ``func`` for ``student_id``.
 
@@ -147,8 +145,8 @@ def grade(
     ----------
     func:
         Callable implementing the student's solution.
-    student_id:
-        Identifier previously registered via :func:`init_students`.
+    students_id:
+        List of identifiers (one or more) of previously registered students via :func:`init_students`.
     public_key_path:
         Path to RSA public key PEM (overrides any embedded ``public_key`` in
         the spec). One of this or the embedded key must be present.
@@ -165,29 +163,31 @@ def grade(
         Scoring summary (also printed). The encrypted report is written to
         disk as a side effect.
     """
-    student = get_student(student_id)
+    students = []
+    for s_id in students_id:
+        students.append(get_student(s_id))
     spec = get_loaded_spec()
 
-    test_results: List[TestResultDict] = []
+    test_results: list[TestResultDict] = []
     for t in spec.tests:
         test_results.append(_run_single(func, t))
 
     scoring = _score(spec, test_results)
 
     report_payload = {
-        'student': student.to_public(),
-        'assignment_id': spec.assignment_id,
-        'spec_version': spec.version,
-        'tests': test_results,
-        'scoring': scoring,
+        "student": [student.to_public() for student in students],
+        "assignment_id": spec.assignment_id,
+        "spec_version": spec.version,
+        "tests": test_results,
+        "scoring": scoring,
     }
 
     # Priority: explicit argument > spec.public_key
-    rsa_path: Optional[str] = None
-    rsa_pem: Optional[str] = None
+    rsa_path: str | None = None
+    rsa_pem: str | None = None
     if public_key_path:
         rsa_path = public_key_path
-    elif getattr(spec, 'public_key', None):  # per-spec PEM
+    elif getattr(spec, "public_key", None):  # per-spec PEM
         rsa_pem = spec.public_key  # type: ignore[assignment]
     else:
         raise ValueError(
@@ -201,8 +201,8 @@ def grade(
         rsa_public_key_pem=rsa_pem,
         ed25519_signing_key_path=signing_key_path,
     )
-    filename = output_path or f"report_{student.id}_{spec.assignment_id}.enc"
-    with open(filename, 'w', encoding='utf-8') as f:
+    filename = output_path or f"report_{'_'.join([student.id for student in students])}_{spec.assignment_id}.enc"
+    with open(filename, "w", encoding="utf-8") as f:
         json.dump(encrypted, f, ensure_ascii=False)
 
     # Display grade to user

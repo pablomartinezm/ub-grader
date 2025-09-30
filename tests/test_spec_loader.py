@@ -1,8 +1,9 @@
 import json
-import tempfile
 import pathlib
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+import tempfile
 import threading
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
 from ub_grader import load_spec
 
 
@@ -57,7 +58,7 @@ def test_load_spec_basic():
     tmp, httpd, _th = _serve_content(content, 8765)
     try:
         spec = load_spec("http://127.0.0.1:8765/spec.json")
-        assert spec.assignment_id == 'p1'
+        assert spec.assignment_id == "p1"
         assert len(spec.tests) == 1
     finally:
         httpd.shutdown()

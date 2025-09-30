@@ -24,14 +24,18 @@ from .students import get_student, init_students
 
 # Expose a runtime package version (PEP 621 metadata) for tooling / debugging.
 try:  # pragma: no cover
-    from importlib.metadata import (  # type: ignore
-        version as _pkg_version,
+    from importlib.metadata import (
         PackageNotFoundError,
     )
+    from importlib.metadata import (  # type: ignore
+        version as _pkg_version,
+    )
 except ImportError:  # pragma: no cover
+    from importlib_metadata import (
+        PackageNotFoundError,  # type: ignore
+    )
     from importlib_metadata import (  # type: ignore
         version as _pkg_version,
-        PackageNotFoundError,  # type: ignore
     )
 
 try:  # pragma: no cover - normal path

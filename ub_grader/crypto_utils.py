@@ -15,20 +15,18 @@ import base64
 import json
 import os
 import time
-from typing import Optional
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ed25519, padding, rsa
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.serialization import (load_pem_private_key,
-                                                          load_pem_public_key)
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 
 def encrypt_and_sign(
     payload: dict,
-    rsa_public_key_path: Optional[str] = None,
-    rsa_public_key_pem: Optional[str] = None,
-    ed25519_signing_key_path: Optional[str] = None,
+    rsa_public_key_path: str | None = None,
+    rsa_public_key_pem: str | None = None,
+    ed25519_signing_key_path: str | None = None,
 ) -> dict:
     """Encrypt a JSON‑serialisable payload and optionally sign it.
 
@@ -78,9 +76,7 @@ def encrypt_and_sign(
         with open(rsa_public_key_path, "rb") as f:
             pub = load_pem_public_key(f.read())
     else:
-        raise ValueError(
-            "Either rsa_public_key_path or rsa_public_key_pem must be provided"
-        )
+        raise ValueError("Either rsa_public_key_path or rsa_public_key_pem must be provided")
     if not isinstance(pub, rsa.RSAPublicKey):
         raise ValueError("Clave pública RSA inválida")
     enc_key = pub.encrypt(

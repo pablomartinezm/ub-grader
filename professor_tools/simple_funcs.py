@@ -1,4 +1,5 @@
 """Funciones simples de ejemplo para el bench de specs."""
+
 from __future__ import annotations
 
 
@@ -12,7 +13,7 @@ def factorial(n: int) -> int:
     if n < 0:
         raise ValueError("n negativo")
     r = 1
-    for i in range(2, n+1):
+    for i in range(2, n + 1):
         r *= i
     return r
 
