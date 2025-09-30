@@ -272,6 +272,7 @@ Release checklist:
 - 0.2.0: Required key in `init_students` changed from `id` to `niub` (pre-1.0 breaking change).
 - 0.2.2: Added Trusted Publisher GitHub Actions workflow (TestPyPI + PyPI) and exposed `__version__` attribute.
 - 0.3.0: Required key in `grader` changed from `student_id` to `students_id`, now a List of strings is required rather than a single string with student id. Updated tests. (0.2.2 breaking change)
+- 0.3.1: Changed hashing methods
 
 ### 10.1 Automated Publishing with PyPI Trusted Publisher (OIDC)
 
