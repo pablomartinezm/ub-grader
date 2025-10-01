@@ -1,35 +1,17 @@
 # ub-grader
 
-Library enabling students to self-grade assignments locally and generate an encrypted (AES-256-GCM + RSA) and optionally signed (Ed25519) report to send to instructors.
+Python library for students to self-grade assignments locally and generate encrypted reports to submit to instructors.
 
 ## Table of Contents
 
-1. Goals / Features
-2. Quick Installation
-3. Student Usage (summary)
-4. Instructor Usage (summary)
-5. End-to-End Flow
-6. Spec Format (summary)
-7. Encrypted Report & Signing
-8. Test Design Best Practices
-9. Development (lint, tests, pre-commit)
-10. Publishing to PyPI
-11. Roadmap
-12. Recent Changes
-13. License
+1. Quick Installation
+2. Student Usage
+3. Spec Format
+4. Encrypted Reports & Signing
+5. Troubleshooting
+6. License
 
-## 1. Goals / Features
-
-- Student registry (alphanumeric NIUB / student id)
-- Load test specifications from URL (`http(s)` or `file://`)
-- Per-test time and memory limits
-- Configurable penalties (time, memory) in scoring
-- Optional hiding of expected values (`expected_hidden`)
-- Hybrid encryption for report confidentiality
-- Optional Ed25519 signing for authenticity
-- Optional spec integrity hash (`integrity.hash`)
-
-## 2. Quick Installation
+## 1. Quick Installation
 
 ```bash
 pip install ub-grader
@@ -37,69 +19,79 @@ pip install ub-grader
 
 Requires Python 3.10+.
 
-## 3. Student Usage (summary)
+## 2. Student Usage
 
-Full guide: see `QUICKSTART_STUDENTS.md`.
+### Basic Usage
 
 ```python
 from ub_grader import init_students, load_spec, grade
 from solution import solve  # your target function
 
+# Register students (single student or multiple for group work)
 init_students([
   {"niub": "A123", "first_name": "Alice", "last_name": "Doe"},
 ])
 
+# Load assignment specification
 load_spec("https://server/assignments/p1.json")  # or file:///abs/path/p1.json
 
+# Grade your solution
 result = grade(
   solve,
   student_id="A123",
-  signing_key_path=None,  # Path to Ed25519 private key if signing
+  signing_key_path=None,  # Path to Ed25519 private key if signing required
 )
 
 print("Final score:", result["final_score"], "/", result["max_score"])
 ```
 
-File generated: `report_A123_<assignment_id>.enc` (do not open or modify).
+After running, a file `report_A123_<assignment_id>.enc` will be generated. Submit this encrypted file to your instructor (do not open or modify it).
 
-## 4. Instructor Usage (summary)
+### Step-by-Step Guide
 
-Full guide: see `QUICKSTART_PROFESSORS.md`.
+1. **Install the library**: `pip install ub-grader`
+2. **Create your solution**: Write your solution function in a Python file
+3. **Register**: Use `init_students()` with your student ID and name (supports single or multiple students)
+4. **Load spec**: Use `load_spec()` with the assignment specification URL provided by your instructor
+5. **Grade**: Use `grade()` with your solution function
+6. **Submit**: Send the generated `.enc` file to your instructor
 
-Typical steps:
+### Optional: Digital Signing
 
-1. Copy a spec from `professor_tools/spec_bench/` (e.g. `add_basic.json`).
-2. Adjust `assignment_id`, tests, weights, limits, and embed `public_key` (recommended).
-3. (Optional) Compute `integrity.hash` after final edit.
-4. Host the spec (HTTPS or LMS).
-5. Receive `report_<niub>_<assignment_id>.enc` files from students.
-6. Decrypt:
+If your instructor requires signed reports:
 
-```bash
-python professor_tools/decrypt_report.py \
-  --rsa-private RSA_PRIVATE.pem \
-  report_A123_p1.enc > report_A123.json
+1. Generate an Ed25519 key pair:
+   ```bash
+   openssl genpkey -algorithm ED25519 -out ed25519_priv.pem
+   openssl pkey -in ed25519_priv.pem -pubout -out ed25519_pub.pem
+   ```
+
+2. Use the private key when grading:
+   ```python
+   result = grade(solve, student_id="A123", signing_key_path="ed25519_priv.pem")
+   ```
+
+3. Submit both the `.enc` report and your public key (`ed25519_pub.pem`) if requested.
+
+### Multiple Students (Group Work)
+
+You can register multiple students at once, which is useful for group assignments or when managing multiple student accounts:
+
+```python
+init_students([
+    {"niub": "A123", "first_name": "Alice", "last_name": "Doe"},
+    {"niub": "B456", "first_name": "Bob", "last_name": "Smith"},
+    {"niub": "C789", "first_name": "Charlie", "last_name": "Brown"},
+])
+
+# Each student can then generate their own report
+result_alice = grade(solve, student_id="A123")
+result_bob = grade(solve, student_id="B456")
 ```
 
-7. (Optional) Verify Ed25519 signature adding `--ed25519-public ED25519_PUB.pem`.
+## 3. Spec Format
 
-Quick local bench:
-
-```bash
-PYTHONPATH=. python -m professor_tools.run_bench --list
-PYTHONPATH=. python -m professor_tools.run_bench run add_basic simple_funcs:add
-```
-
-## 5. End-to-End Flow
-
-1. Instructor designs and publishes spec.
-2. Student registers and loads the spec.
-3. Student runs `grade()` producing encrypted report.
-4. Student submits the `.enc` file.
-5. Instructor decrypts and optionally verifies signature.
-6. Final score consolidated.
-
-## 6. Spec Format (minimal summary)
+Assignment specifications are provided by your instructor as JSON files. A typical spec includes:
 
 ```json
 {
@@ -123,48 +115,61 @@ PYTHONPATH=. python -m professor_tools.run_bench run add_basic simple_funcs:add
     "penalties": {},
     "max_score": 10
   },
-  "integrity": {},
   "public_key": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n"
 }
 ```
 
-Notes:
+**Key points for students:**
+- Tests may have `expected_hidden: true`, which means you won't see the expected output, only pass/fail
+- Each test has time and memory limits
+- Exceeding limits may result in penalties applied to your score
+- The `public_key` is used to encrypt your report
 
-- `expected_hidden: true` hides expected value in student report.
-- Optional penalties (`penalties.time_over_ms`, `penalties.memory_over_kb`).
-- If `public_key` missing student must pass one (embed recommended).
-- `integrity.hash` can be added as `sha256:HEX`.
+## 4. Encrypted Reports & Signing
 
-## 7. Encrypted Report & Signing
+When you run `grade()`, an encrypted report file is generated: `report_<niub>_<assignment_id>.enc`.
 
-Output file: `report_<niub>_<assignment_id>.enc`.
+**What's in the report:**
+- Your test results (pass/fail, execution time, memory usage)  
+- Your final score and the maximum possible score
+- Assignment metadata
+- Your student information
+- Optional digital signature (if you provided a signing key)
 
-Decrypted content includes:
+**Important:**
+- **Do not** open, edit, or modify the `.enc` file
+- The file uses AES-256-GCM encryption with RSA key exchange
+- Only your instructor can decrypt and read the contents
+- File size is typically a few kilobytes
 
-- Spec metadata (id, version)
-- Test list (pass/fail, time, memory)
-- Partial & final score (`final_score`, `max_score`)
-- Student info
-- (Optional) Ed25519 signature of canonical JSON prior to encryption
+## 5. Troubleshooting
 
-Decrypt (instructor):
+### Common Issues
 
-```bash
-python professor_tools/decrypt_report.py --rsa-private RSA_PRIVATE.pem report_A123_p1.enc > report.json
-```
+| Issue | Likely Cause | Solution |
+|-------|-------------|----------|
+| `RuntimeError: No spec loaded` | Forgot to call `load_spec()` | Call `load_spec()` before `grade()` |
+| `ValueError: Missing required field` | Malformed spec JSON | Contact your instructor for a valid spec |
+| `ValueError: Integrity hash does not match` | Spec was modified | Re-download the original spec |
+| Public key related error | Missing public key in spec | Ensure spec includes `public_key` or contact instructor |
+| Very low score | Tests failing or penalties applied | Review your logic and check time/memory limits |
 
-Verify signature (if student signed): add `--ed25519-public ED25519_PUB.pem`.
+### Best Practices
 
-## 8. Test Design Best Practices
+- Use a dedicated virtual environment: `python -m venv myenv && source myenv/bin/activate`
+- Keep your Ed25519 private key secure and never share it
+- Don't modify the assignment spec file
+- Test your solution thoroughly before final grading
+- Keep backups of your solution code
 
-- Few high-weight tests + several light ones for granularity.
-- Use `expected_hidden` for logic-revealing cases.
-- Set time limits from real measurements (+ ~2x margin).
-- Penalize only significant excess.
-- Consider a hidden stress test of moderate weight.
+### Getting Help
 
-## 9. Development (lint, tests, pre-commit)
+- Check that your Python version is 3.10 or higher
+- Ensure you have the latest version: `pip install -U ub-grader`
+- Review the error messages carefully - they usually indicate the specific issue
+- Contact your instructor if you suspect issues with the assignment specification
 
+<<<<<<< Updated upstream
 Install dev environment:
 
 ```bash
@@ -303,5 +308,8 @@ Notes:
 Minimal manual override: you can still do a local `twine upload` if needed; both methods coexist.
 
 ## 13. License
+=======
+## 6. License
+>>>>>>> Stashed changes
 
 MIT
