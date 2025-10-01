@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ub-grader"
-version = "0.3.3"
+version = "0.3.4"
 description = "Librería para auto-corrección local de prácticas con reporte cifrado y firmado"
 authors = [{name="Universidad de Barcelona", email="noreply@example.com"}]
 requires-python = ">=3.10"
