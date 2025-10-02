@@ -26,7 +26,7 @@ from typing import Any
 
 from .crypto_utils import encrypt_and_sign
 from .spec_loader import Spec, TestSpec, get_loaded_spec
-from .students import get_student
+from .students import get_all_students, get_student
 
 # (No public symbols defined at module level besides grade())
 
@@ -82,6 +82,15 @@ def _run_single(func: Callable, spec: TestSpec) -> TestResultDict:
     if mem_kb > spec.memory_limit_kb:
         passed = False
 
+    if not spec.input_hidden:
+        print(f"[TEST {spec.id}] Input {spec.input_args}")
+    if not spec.expected_hidden:
+        print(f"[TEST {spec.id}] Expected {spec.expected}.")
+        if passed:
+            print(f"[TEST {spec.id}] PASSED")
+        else:
+            print(f"[TEST {spec.id}] FAILED")
+
     return TestResultDict(
         id=spec.id,
         passed=passed,
@@ -134,7 +143,7 @@ def _score(spec: Spec, test_results: list[TestResultDict]) -> dict[str, Any]:
 
 def grade(
     func: Callable,
-    students_id: list[str],
+    students_id: str | list[str] | None = None,
     public_key_path: str | None = None,
     signing_key_path: str | None = None,
     output_path: str | None = None,
@@ -146,7 +155,9 @@ def grade(
     func:
         Callable implementing the student's solution.
     students_id:
-        List of identifiers (one or more) of previously registered students via :func:`init_students`.
+        Id of an student or a list of identifiers of different of previously
+        registered students via :func:`init_students`. Defaults to all
+        initialized students in :func:`init_students` if not specified.
     public_key_path:
         Path to RSA public key PEM (overrides any embedded ``public_key`` in
         the spec). One of this or the embedded key must be present.
@@ -164,8 +175,16 @@ def grade(
         disk as a side effect.
     """
     students = []
-    for s_id in students_id:
-        students.append(get_student(s_id))
+    if students_id is None:
+        students = get_all_students()
+    elif isinstance(students_id, str):
+        students.append(get_student(students_id))
+    elif isinstance(students_id, list) and all(isinstance(s, str) for s in students_id):
+        for s_id in students_id:
+            students.append(get_student(s_id))
+    else:
+        raise ValueError(f"Type {type(students_id)} for students_id is not an accepted type for this argument.")
+
     spec = get_loaded_spec()
 
     test_results: list[TestResultDict] = []

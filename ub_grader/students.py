@@ -105,3 +105,8 @@ def init_students(students: Iterable[dict | Student]) -> None:
 def get_student(student_id: str) -> Student:
     """Lookup a student by ID from the global registry."""
     return _registry.get(student_id)
+
+
+def get_all_students() -> list[Student]:
+    """Recover all registered students by ID from the global registry."""
+    return _registry.all()

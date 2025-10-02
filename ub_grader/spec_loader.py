@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import urllib.request
 from dataclasses import dataclass
 from typing import Any
@@ -34,6 +35,7 @@ class TestSpec:
     input_kwargs: dict
     expected: Any
     expected_hidden: bool
+    input_hidden: bool
     time_limit_ms: int
     memory_limit_kb: int
     weight: float
@@ -123,8 +125,13 @@ def load_spec(url: str) -> Spec:
     Parameters
     ----------
     url: str
-        HTTP(S) URL or ``file://`` URI pointing to the JSON spec.
+        HTTP(S) URL or ``file:///`` URI pointing to the JSON spec.
     """
+    prefix = "file:///"
+
+    if prefix in url:
+        url = "file:" + urllib.request.pathname2url(os.path.abspath(url[url.index(prefix) + len(prefix) :]))
+
     with urllib.request.urlopen(url) as resp:  # noqa: S310
         raw = resp.read().decode("utf-8")
     data = json.loads(raw)
@@ -141,6 +148,7 @@ def load_spec(url: str) -> Spec:
                 input_args=(t.get("input", {}).get("args") or []),
                 input_kwargs=(t.get("input", {}).get("kwargs") or {}),
                 expected=t.get("expected"),
+                input_hidden=bool(t.get("input_hidden", False)),
                 expected_hidden=bool(t.get("expected_hidden", False)),
                 time_limit_ms=int(t.get("time_limit_ms", 500)),
                 memory_limit_kb=int(t.get("memory_limit_kb", 10_000)),
